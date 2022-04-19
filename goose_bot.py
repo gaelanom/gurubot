@@ -1,17 +1,18 @@
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Goose Bot Discord management tool meant for use by regular server members.
+# Made by Gaelan O'Shea-McKay for personal non-commercial use.
 
-# Import required packages
+# Import discord packages
 import discord
 from discord.ext import commands
 
+# Import env file packages
 import os
 from dotenv import load_dotenv
 
+# Import utils for the bot
 import goose_bot_utils
 
-# Load the bot token
-
+# Load the bot token; The token is not to be made publicly available, so it is stored offline.
 load_dotenv('environment.env')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
@@ -32,7 +33,7 @@ client = discord.Client()
 goose_bot = commands.Bot(command_prefix=GOOSE_BOT_COMMAND_PREFIX, description=GOOSE_BOT_DESCRIPTION, intents=intents)
 
 
-# Log readiness
+# Log readiness.
 @goose_bot.event
 async def on_ready():
     print('Logged in as ' + goose_bot.user.name)
@@ -40,7 +41,7 @@ async def on_ready():
     print('------')
 
 
-# Roll a die
+# Roll dice.
 @goose_bot.command()
 async def roll(ctx, dice: str):
     print("Rolling dice...")
@@ -71,20 +72,26 @@ async def role(ctx, role_name: discord.Role = "", user_name: discord.Member = "a
     if role_name == "":
         await ctx.send("Specify a role to add or remove.")
     else:
-        if user_name == "author":
-            if role_name in ctx.author.roles:
-                await ctx.author.remove_roles(role_name)
-                await ctx.send("Relieved you of the role `" + role_name.name + "`.")
+        try:
+            if user_name == "author":
+                print("Managing role " + role_name.name + " for " + ctx.author.display_name + ".")
+                if role_name in ctx.author.roles:
+                    await ctx.author.remove_roles(role_name)
+                    await ctx.send("Relieved you of the role `" + role_name.name + "`.")
+                else:
+                    await ctx.author.add_roles(role_name)
+                    await ctx.send("Granted you the role `" + role_name.name + "`.")
             else:
-                await ctx.author.add_roles(role_name)
-                await ctx.send("Granted you the role `" + role_name.name + "`.")
-        else:
-            if role_name in user_name.roles:
-                await ctx.author.remove_roles(role_name)
-                await ctx.send("Removed `" + role_name.name + "` from " + user_name.display_name + ".")
-            else:
-                await ctx.author.add_roles(role_name)
-                await ctx.send("Granted `" + role_name.name + "` to " + user_name.display_name + ".")
+                print("Managing role " + role_name.name + " for " + user_name.display_name + ".")
+                if role_name in user_name.roles:
+                    await user_name.remove_roles(role_name)
+                    await ctx.send("Removed `" + role_name.name + "` from " + user_name.display_name + ".")
+                else:
+                    await user_name.add_roles(role_name)
+                    await ctx.send("Granted `" + role_name.name + "` to " + user_name.display_name + ".")
+        except (Exception,):
+            await ctx.send("Something went wrong assigning roles, sorry!")
 
 
+# Run the bot!
 goose_bot.run(BOT_TOKEN)
