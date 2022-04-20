@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="5efc05a0-202c-4e75-80da-65e2a35a2e67" name="Goosebot EC2" url="http://50.68.38.107:5000/">
+        <fileTransfer rootFolder="/home/ec2-user" accessType="SFTP" host="34.211.124.65" port="22" sshConfigId="36a28341-6dca-46c7-a31d-18fc3a38cbba" sshConfig="ec2-user@34.211.124.65:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
