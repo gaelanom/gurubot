@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 import goose_bot_utils
 import extended_emoji_dict
 
+# Import time for some delays
+from time import sleep
+
 # Load the bot token; The token is not to be made publicly available, so it is stored offline.
 load_dotenv('environment.env')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
@@ -23,6 +26,7 @@ GOOSE_BOT_COMMAND_PREFIX = '.'
 GOOSE_BOT_DESCRIPTION = "A bot for basic server utilities."
 REACTION_ROLE_MESSAGE_ID = os.getenv('REACTION_ROLE_MESSAGE_ID')
 NOTIF_SUB_MESSAGE_ID = os.getenv('NOTIF_SUB_MESSAGE_ID')
+SUB_CHANNEL_ID = os.getenv('SUB_CHANNEL_ID')
 
 
 # Set up required intents
@@ -135,6 +139,10 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     try:
         await payload.member.add_roles(emoji_role)
         print("Adding role " + str(emoji_role) + " to " + payload.member.display_name + "!")
+        message = await goose_bot.get_channel(
+            int(SUB_CHANNEL_ID)).send("Added role `" + str(emoji_role) + "` to " + payload.member.display_name + ".")
+        sleep(5)
+        await message.delete()
     except discord.HTTPException:
         pass
 
@@ -167,6 +175,10 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
     try:
         await member.remove_roles(emoji_role)
         print("Removing role " + str(emoji_role) + " from " + member.display_name + "!")
+        message = await goose_bot.get_channel(
+            int(SUB_CHANNEL_ID)).send("Removed role `" + str(emoji_role) + "` from " + member.display_name + ".")
+        sleep(5)
+        await message.delete()
     except discord.HTTPException:
         pass
 
