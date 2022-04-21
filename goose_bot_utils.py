@@ -16,7 +16,7 @@ async def roll_result(limit, rolls):
 
 
 async def prettify_roles(role_list, prefix):
-    pretty_roles = prefix
+    pretty_roles = prefix + "\n"
     for r in role_list:
         r = '`' + r.name.replace("@", "") + '`'
         pretty_roles += r + ","
