@@ -2,6 +2,8 @@
 # Made by Gaelan O'Shea-McKay for personal non-commercial use.
 
 # Import discord packages
+import logging
+
 import discord
 from discord.ext import commands
 
@@ -13,8 +15,12 @@ from dotenv import load_dotenv
 import goose_bot_utils
 import extended_emoji_dict
 
-# Import time for some delays
+# Import sleep for some delays
 from time import sleep
+
+# Import datetime for upkeep messages
+from datetime import datetime, time, timedelta
+import asyncio
 
 # Load the bot token; The token is not to be made publicly available, so it is stored offline.
 load_dotenv('environment.env')
@@ -27,6 +33,11 @@ GOOSE_BOT_DESCRIPTION = "A bot for basic server utilities."
 REACTION_ROLE_MESSAGE_ID = os.getenv('REACTION_ROLE_MESSAGE_ID')
 NOTIF_SUB_MESSAGE_ID = os.getenv('NOTIF_SUB_MESSAGE_ID')
 SUB_CHANNEL_ID = os.getenv('SUB_CHANNEL_ID')
+DAILY_MESSAGE_TIME = time(19, 0, 0)  # 12PM PST
+DAILY_MESSAGE_CHANNEL_ID = int(os.getenv('DAILY_MESSAGE_CHANNEL_ID'))
+HOURLY_MESSAGE_CHANNEL_ID = DAILY_MESSAGE_CHANNEL_ID
+DAILY_MESSAGE = "Goose bot lives another day!"
+HOURLY_MESSAGE = "Goose bot checking in."
 
 
 # Set up required intents
@@ -34,6 +45,9 @@ intents = discord.Intents.default()
 intents.typing = False
 intents.presences = False
 intents.members = True
+
+# Set up the logger
+goose_bot_logger = logging.getLogger('goose_bot_logger')
 
 # Initialize the client
 client = discord.Client()
@@ -190,6 +204,76 @@ async def get_role_id_from_emoji(emoji):
     else:
         role_id = emoji_to_role[emoji.id]
     return role_id
+
+
+# Send an arbitrary message in an arbitrary channel. Used by daily_message and hourly_message.
+async def send_message_in_channel(channel_id, message_str):
+    await goose_bot.wait_until_ready()
+    channel = goose_bot.get_channel(channel_id)
+    await channel.send(message_str)
+
+
+# Send a message every day at the defined DAILY_MESSAGE_TIME.
+async def daily_message(channel_id, message_str):
+    now = datetime.utcnow()
+    print("It is now " + str(now) + ".")
+    if now.time() > DAILY_MESSAGE_TIME:
+        print("The daily message time was " + str(DAILY_MESSAGE_TIME) + " but it is already " + now + ".")
+        print("We should wait until tomorrow to send a daily message.")
+        tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+        print("Tomorrow is " + str(tomorrow) + ".")
+        seconds = (tomorrow - now).total_seconds()
+        print("It will be tomorrow in " + str(seconds) + ".")
+        print("Waiting for " + str(seconds) + "...")
+        await asyncio.sleep(seconds)
+    while True:
+        now = datetime.utcnow()
+        print("It is now " + str(now) + ".")
+        target_time = datetime.combine(now.date(), DAILY_MESSAGE_TIME)
+        print("A message should be sent at " + str(target_time) + ".")
+        seconds_until_target = (target_time - now).total_seconds()
+        print("That is in " + str(seconds_until_target) + " seconds from now.")
+        print("Waiting for " + str(seconds_until_target) + " seconds...")
+        await asyncio.sleep(seconds_until_target)
+        print("Sending daily message!")
+        await send_message_in_channel(channel_id, message_str)
+        print("Daily message sent.")
+        tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+        seconds = (tomorrow - now).total_seconds()
+        print("Tomorrow is " + str(tomorrow) + ", which is in " + str(seconds) + " seconds.")
+        print("Waiting for " + str(seconds) + " seconds...")
+        await asyncio.sleep(seconds)
+
+
+# Send a message on the hour, every hour.
+async def hourly_message(channel_id, message_str):
+    while True:
+        now = datetime.utcnow()
+        print("It is now " + str(now) + ".")
+        next_hour = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        print("The next clock hour is " + str(next_hour) + ".")
+        seconds_until_next_hour = (next_hour - now).total_seconds()
+        print("There are " + str(seconds_until_next_hour) + " seconds between now and then.")
+        print("Waiting for " + str(seconds_until_next_hour) + " seconds...")
+        await asyncio.sleep(seconds_until_next_hour)
+        print("Sending hourly message!")
+        await send_message_in_channel(channel_id, message_str)
+        print("Hourly message sent.")
+        in_an_hour = datetime.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        print("An hour from now is " + str(in_an_hour) + ".")
+        seconds = (in_an_hour - now).total_seconds()
+        print("There are " + str(seconds) + " seconds between now and then.")
+        print("Waiting for " + str(seconds) + " seconds...")
+        await asyncio.sleep(seconds)
+
+
+# Prepare to maintain daily and hourly message schedules.
+def set_up_scheduled_messages():
+    goose_bot.loop.create_task(daily_message(DAILY_MESSAGE_CHANNEL_ID, DAILY_MESSAGE))
+    goose_bot.loop.create_task(hourly_message(HOURLY_MESSAGE_CHANNEL_ID, HOURLY_MESSAGE))
+
+
+set_up_scheduled_messages()
 
 
 # Run the bot!
