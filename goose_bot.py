@@ -47,7 +47,7 @@ intents.presences = False
 intents.members = True
 
 # Set up the logger
-LOG_FILE_NAME = "goose_bot_logs.txt"
+LOG_FILE_NAME = "goose_bot_logs.log"
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(filename=LOG_FILE_NAME, format=LOG_FORMAT, level=logging.INFO)
 
