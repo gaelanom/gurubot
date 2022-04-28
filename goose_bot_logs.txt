@@ -1,0 +1,10 @@
+2022-04-28 00:22:37,501 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2022-04-28 00:24:23,558 - discord.client - WARNING - PyNaCl is not installed, voice will NOT be supported
+2022-04-28 00:24:23,568 - root - INFO - Daily Message: It is now 2022-04-28 07:24:23.568076.
+2022-04-28 00:24:23,568 - root - INFO - Daily Message: It is now 2022-04-28 07:24:23.568076.
+2022-04-28 00:24:23,568 - root - INFO - Daily Message: A message should be sent at 2022-04-28 19:00:00.
+2022-04-28 00:24:23,568 - root - INFO - Daily Message: That is in 41736.431924 seconds from now.
+2022-04-28 00:24:23,569 - root - INFO - Daily Message: Waiting for 41736.431924 seconds...
+2022-04-28 00:24:23,569 - discord.client - INFO - logging in using static token
+2022-04-28 00:24:23,904 - discord.gateway - INFO - Shard ID None has sent the IDENTIFY payload.
+2022-04-28 00:24:24,059 - discord.gateway - INFO - Shard ID None has connected to Gateway: ["gateway-prd-main-r3zl",{"micros":68236,"calls":["discord-sessions-green-prd-2-162",{"micros":65097,"calls":["start_session",{"micros":31164,"calls":["discord-api-7c7df694fd-srkfh",{"micros":27684,"calls":["get_user",{"micros":5254},"add_authorized_ip",{"micros":1239},"get_guilds",{"micros":2805},"coros_wait",{"micros":1}]}]},"guilds_connect",{"micros":19,"calls":[]},"presence_connect",{"micros":1,"calls":[]}]}]}] (Session ID: fe08fe4262f2080e7e31a81941220bc7).

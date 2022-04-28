@@ -47,7 +47,9 @@ intents.presences = False
 intents.members = True
 
 # Set up the logger
-goose_bot_logger = logging.getLogger('goose_bot_logger')
+LOG_FILE_NAME = "goose_bot_logs.txt"
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+logging.basicConfig(filename=LOG_FILE_NAME, format=LOG_FORMAT, level=logging.DEBUG)
 
 # Initialize the client
 client = discord.Client()
@@ -216,31 +218,46 @@ async def send_message_in_channel(channel_id, message_str):
 # Send a message every day at the defined DAILY_MESSAGE_TIME.
 async def daily_message(channel_id, message_str):
     now = datetime.utcnow()
+    logging.debug("Daily Message: It is now " + str(now) + ".")
     print("It is now " + str(now) + ".")
     if now.time() > DAILY_MESSAGE_TIME:
-        print("The daily message time was " + str(DAILY_MESSAGE_TIME) + " but it is already " + now + ".")
+        logging.debug("Daily Message: The daily message time was " + str(DAILY_MESSAGE_TIME)
+                      + " but it is already " + str(now) + ".")
+        print("The daily message time was " + str(DAILY_MESSAGE_TIME) + " but it is already " + str(now) + ".")
+        logging.debug("Daily Message: We should wait until tomorrow to send a daily message.")
         print("We should wait until tomorrow to send a daily message.")
         tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
+        logging.debug("Daily Message: Tomorrow is " + str(tomorrow) + ".")
         print("Tomorrow is " + str(tomorrow) + ".")
         seconds = (tomorrow - now).total_seconds()
+        logging.debug("Daily Message: It will be tomorrow in " + str(seconds) + ".")
         print("It will be tomorrow in " + str(seconds) + ".")
+        logging.debug("Daily Message: Waiting for " + str(seconds) + "...")
         print("Waiting for " + str(seconds) + "...")
         await asyncio.sleep(seconds)
     while True:
         now = datetime.utcnow()
+        logging.debug("Daily Message: It is now " + str(now) + ".")
         print("It is now " + str(now) + ".")
         target_time = datetime.combine(now.date(), DAILY_MESSAGE_TIME)
+        logging.debug("Daily Message: A message should be sent at " + str(target_time) + ".")
         print("A message should be sent at " + str(target_time) + ".")
         seconds_until_target = (target_time - now).total_seconds()
+        logging.debug("Daily Message: That is in " + str(seconds_until_target) + " seconds from now.")
         print("That is in " + str(seconds_until_target) + " seconds from now.")
+        logging.debug("Daily Message: Waiting for " + str(seconds_until_target) + " seconds...")
         print("Waiting for " + str(seconds_until_target) + " seconds...")
         await asyncio.sleep(seconds_until_target)
+        logging.debug("Daily Message: Sending daily message!")
         print("Sending daily message!")
         await send_message_in_channel(channel_id, message_str)
+        logging.debug("Daily Message: Daily message sent.")
         print("Daily message sent.")
         tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
         seconds = (tomorrow - now).total_seconds()
+        logging.debug("Daily Message: Tomorrow is " + str(tomorrow) + ", which is in " + str(seconds) + " seconds.")
         print("Tomorrow is " + str(tomorrow) + ", which is in " + str(seconds) + " seconds.")
+        logging.debug("Daily Message: Waiting for " + str(seconds) + " seconds...")
         print("Waiting for " + str(seconds) + " seconds...")
         await asyncio.sleep(seconds)
 
