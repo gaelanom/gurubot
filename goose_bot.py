@@ -247,7 +247,7 @@ async def daily_message(channel_id, message_str):
         seconds_until_target = (target_time - now).total_seconds()
         time_str = await goose_bot_utils.make_time_str(seconds_until_target)
         logging.info("Daily Message: That is in " + time_str + " from now.")
-        logging.info("Daily Message: Waiting for " + time_str + "( " + str(seconds_until_target) + ") seconds...")
+        logging.info("Daily Message: Waiting for " + time_str + " (" + str(seconds_until_target) + ") seconds...")
         await asyncio.sleep(seconds_until_target)
         logging.info("Daily Message: Sending daily message!")
         await send_message_in_channel(channel_id, message_str)

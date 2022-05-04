@@ -1,3 +1,5 @@
 /environment.env
 /extended_emoji_dict.py
 /goose_bot_logs.log
+/venv
+/_pycache_
