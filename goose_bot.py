@@ -220,7 +220,7 @@ async def get_role_id_from_emoji(emoji):
 async def send_message_in_channel(channel_id, message_str):
     await goose_bot.wait_until_ready()
     channel = goose_bot.get_channel(channel_id)
-    logging.info("Sending message " + message_str + " to channel " + channel.name)
+    logging.info("Sending message \"" + message_str + "\" to channel '#" + channel.name + "'")
     await channel.send(message_str)
 
 
