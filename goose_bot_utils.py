@@ -1,4 +1,5 @@
 import random
+from math import floor
 
 
 async def roll_result(limit, rolls):
@@ -26,3 +27,11 @@ async def prettify_roles(role_list, prefix):
 async def prettify_role(role_name: str):
     role_name = '`' + role_name.name.replace("@", "") + '`'
     return role_name
+
+
+async def make_time_str(seconds):
+    minutes = floor(seconds / 60)
+    hours = floor(minutes / 60)
+    minutes = minutes - hours * 60
+    sec = (seconds - minutes * 60) - hours * 3600
+    return str(floor(hours)) + " hours, " + str(floor(minutes)) + " minutes, and " + str(floor(sec)) + " seconds"

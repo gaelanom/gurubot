@@ -3,7 +3,6 @@
 
 # Import discord packages
 import logging
-
 import discord
 from discord.ext import commands
 
@@ -22,6 +21,9 @@ from time import sleep
 from datetime import datetime, time, timedelta
 import asyncio
 
+# Miscellaneous imports
+from math import floor
+
 # Load the bot token; The token is not to be made publicly available, so it is stored offline.
 load_dotenv('environment.env')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
@@ -39,7 +41,6 @@ HOURLY_MESSAGE_CHANNEL_ID = DAILY_MESSAGE_CHANNEL_ID
 DAILY_MESSAGE = "Goose bot lives another day!"
 HOURLY_MESSAGE = "Goose bot checking in."
 
-
 # Set up required intents
 intents = discord.Intents.default()
 intents.typing = False
@@ -47,6 +48,7 @@ intents.presences = False
 intents.members = True
 
 # Set up the logger
+
 LOG_FILE_NAME = "goose_bot_logs.log"
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(filename=LOG_FILE_NAME, format=LOG_FORMAT, level=logging.INFO)
@@ -62,6 +64,7 @@ goose_bot = commands.Bot(command_prefix=GOOSE_BOT_COMMAND_PREFIX, description=GO
 channel_sub_message_id = REACTION_ROLE_MESSAGE_ID
 notif_sub_message_id = NOTIF_SUB_MESSAGE_ID
 emoji_to_role = extended_emoji_dict.emoji_to_role_extended
+
 
 # Basic version of the emoji-> role dict, to use if you don't have a more personal one to supply in extended_emoji_dict.
 # emoji_to_role = {
@@ -82,8 +85,8 @@ async def on_ready():
 # Roll dice.
 @goose_bot.command()
 async def roll(ctx, dice: str):
-    print("Rolling dice...")
     """Roll dice in NdN format."""
+    logging.info("Dice: Rolling dice...")
     try:
         rolls, limit = map(int, dice.split('d'))
     except (Exception,):
@@ -97,9 +100,11 @@ async def roll(ctx, dice: str):
 # List the roles of the server and the command author.
 @goose_bot.command()
 async def roles(ctx):
+    """List available and currently assigned roles."""
     server_roles = ctx.author.guild.roles
     prettified_member_roles = await goose_bot_utils.prettify_roles(ctx.author.roles, "Your roles:")
     prettified_server_roles = await goose_bot_utils.prettify_roles(server_roles, "All roles:")
+    logging.info("Role Management: Printing roles for server " + ctx.author.guild.name + ".")
     await ctx.send(prettified_server_roles)
     await ctx.send(prettified_member_roles)
 
@@ -107,12 +112,14 @@ async def roles(ctx):
 # Add the desired role to the command author or a specific user.
 @goose_bot.command()
 async def role(ctx, role_name: discord.Role = "", user_name: discord.Member = "author"):
+    """Add/remove a role by its name."""
     if role_name == "":
         await ctx.send("Specify a role to add or remove.")
     else:
         try:
             if user_name == "author":
-                print("Managing role " + role_name.name + " for " + ctx.author.display_name + ".")
+                logging.info("Role Management: Managing role " + role_name.name 
+                             + " for " + ctx.author.display_name + ".")
                 if role_name in ctx.author.roles:
                     await ctx.author.remove_roles(role_name)
                     await ctx.send("Relieved you of the role `" + role_name.name + "`.")
@@ -120,7 +127,8 @@ async def role(ctx, role_name: discord.Role = "", user_name: discord.Member = "a
                     await ctx.author.add_roles(role_name)
                     await ctx.send("Granted you the role `" + role_name.name + "`.")
             else:
-                print("Managing role " + role_name.name + " for " + user_name.display_name + ".")
+                logging.info("Role Management: Managing role " + role_name.name
+                             + " for " + user_name.display_name + ".")
                 if role_name in user_name.roles:
                     await user_name.remove_roles(role_name)
                     await ctx.send("Removed `" + role_name.name + "` from " + user_name.display_name + ".")
@@ -138,14 +146,14 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         return
 
     guild = goose_bot.get_guild(payload.guild_id)
-    print("Reaction added to a subscription message in " + guild.name + "!")
+    logging.info("Reaction Roles: Reaction added to a subscription message in " + guild.name + "!")
     if guild is None:
         return
 
     try:
         role_id = await get_role_id_from_emoji(payload.emoji)
     except KeyError:
-        print("I don't know what role to grant for that emoji.")
+        logging.info("Reaction Roles: I don't know what role to grant for that emoji.")
         return
 
     emoji_role = guild.get_role(role_id)
@@ -154,7 +162,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 
     try:
         await payload.member.add_roles(emoji_role)
-        print("Adding role " + str(emoji_role) + " to " + payload.member.display_name + "!")
+        logging.info("Reaction Roles: Adding role " + str(emoji_role) + " to " + payload.member.display_name + "!")
         message = await goose_bot.get_channel(
             int(SUB_CHANNEL_ID)).send("Added role `" + str(emoji_role) + "` to " + payload.member.display_name + ".")
         sleep(5)
@@ -170,14 +178,14 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
         return
 
     guild = goose_bot.get_guild(payload.guild_id)
-    print("Reaction removed from a subscription message in " + guild.name + "!")
+    logging.info("Reaction Roles: Reaction removed from a subscription message in " + guild.name + "!")
     if guild is None:
         return
 
     try:
         role_id = await get_role_id_from_emoji(payload.emoji)
     except KeyError:
-        print("I don't know what role to remove for that emoji.")
+        logging.info("Reaction Roles: I don't know what role to remove for that emoji.")
         return
 
     emoji_role = guild.get_role(role_id)
@@ -190,7 +198,7 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
 
     try:
         await member.remove_roles(emoji_role)
-        print("Removing role " + str(emoji_role) + " from " + member.display_name + "!")
+        logging.info("Reaction Roles: Removing role " + str(emoji_role) + " from " + member.display_name + "!")
         message = await goose_bot.get_channel(
             int(SUB_CHANNEL_ID)).send("Removed role `" + str(emoji_role) + "` from " + member.display_name + ".")
         sleep(5)
@@ -212,6 +220,7 @@ async def get_role_id_from_emoji(emoji):
 async def send_message_in_channel(channel_id, message_str):
     await goose_bot.wait_until_ready()
     channel = goose_bot.get_channel(channel_id)
+    logging.info("Sending message " + message_str + " to channel " + channel.name)
     await channel.send(message_str)
 
 
@@ -219,46 +228,35 @@ async def send_message_in_channel(channel_id, message_str):
 async def daily_message(channel_id, message_str):
     now = datetime.utcnow()
     logging.info("Daily Message: It is now " + str(now) + ".")
-    print("It is now " + str(now) + ".")
     if now.time() > DAILY_MESSAGE_TIME:
         logging.info("Daily Message: The daily message time was " + str(DAILY_MESSAGE_TIME)
-                      + " but it is already " + str(now) + ".")
-        print("The daily message time was " + str(DAILY_MESSAGE_TIME) + " but it is already " + str(now) + ".")
+                     + " but it is already " + str(now) + ".")
         logging.info("Daily Message: We should wait until tomorrow to send a daily message.")
-        print("We should wait until tomorrow to send a daily message.")
         tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
         logging.info("Daily Message: Tomorrow is " + str(tomorrow) + ".")
-        print("Tomorrow is " + str(tomorrow) + ".")
         seconds = (tomorrow - now).total_seconds()
-        logging.info("Daily Message: It will be tomorrow in " + str(seconds) + ".")
-        print("It will be tomorrow in " + str(seconds) + ".")
-        logging.info("Daily Message: Waiting for " + str(seconds) + "...")
-        print("Waiting for " + str(seconds) + "...")
+        time_str = await goose_bot_utils.make_time_str(seconds)
+        logging.info("Daily Message: It will be tomorrow in " + time_str + ".")
+        logging.info("Daily Message: Waiting for " + time_str + " (" + str(seconds) + ") seconds...")
         await asyncio.sleep(seconds)
     while True:
         now = datetime.utcnow()
         logging.info("Daily Message: It is now " + str(now) + ".")
-        print("It is now " + str(now) + ".")
         target_time = datetime.combine(now.date(), DAILY_MESSAGE_TIME)
         logging.info("Daily Message: A message should be sent at " + str(target_time) + ".")
-        print("A message should be sent at " + str(target_time) + ".")
         seconds_until_target = (target_time - now).total_seconds()
-        logging.info("Daily Message: That is in " + str(seconds_until_target) + " seconds from now.")
-        print("That is in " + str(seconds_until_target) + " seconds from now.")
-        logging.info("Daily Message: Waiting for " + str(seconds_until_target) + " seconds...")
-        print("Waiting for " + str(seconds_until_target) + " seconds...")
+        time_str = await goose_bot_utils.make_time_str(seconds_until_target)
+        logging.info("Daily Message: That is in " + time_str + " from now.")
+        logging.info("Daily Message: Waiting for " + time_str + "( " + str(seconds_until_target) + ") seconds...")
         await asyncio.sleep(seconds_until_target)
         logging.info("Daily Message: Sending daily message!")
-        print("Sending daily message!")
         await send_message_in_channel(channel_id, message_str)
         logging.info("Daily Message: Daily message sent.")
-        print("Daily message sent.")
         tomorrow = datetime.combine(now.date() + timedelta(days=1), time(0))
         seconds = (tomorrow - now).total_seconds()
-        logging.info("Daily Message: Tomorrow is " + str(tomorrow) + ", which is in " + str(seconds) + " seconds.")
-        print("Tomorrow is " + str(tomorrow) + ", which is in " + str(seconds) + " seconds.")
+        time_str = await goose_bot_utils.make_time_str(seconds)
+        logging.info("Daily Message: Tomorrow is " + str(tomorrow) + ", which is in " + time_str + ".")
         logging.info("Daily Message: Waiting for " + str(seconds) + " seconds...")
-        print("Waiting for " + str(seconds) + " seconds...")
         await asyncio.sleep(seconds)
 
 
@@ -266,21 +264,23 @@ async def daily_message(channel_id, message_str):
 async def hourly_message(channel_id, message_str):
     while True:
         now = datetime.utcnow()
-        print("It is now " + str(now) + ".")
+        logging.info("Hourly Message: It is now " + str(now) + ".")
         next_hour = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-        print("The next clock hour is " + str(next_hour) + ".")
+        logging.info("Hourly Message: The next clock hour is " + str(next_hour) + ".")
         seconds_until_next_hour = (next_hour - now).total_seconds()
-        print("There are " + str(seconds_until_next_hour) + " seconds between now and then.")
-        print("Waiting for " + str(seconds_until_next_hour) + " seconds...")
+        time_str = await goose_bot_utils.make_time_str(seconds_until_next_hour)
+        logging.info("Hourly Message: There are " + time_str + " between now and then.")
+        logging.info("Hourly Message: Waiting for " + time_str + " (" + str(seconds_until_next_hour) + " seconds" + ")...")
         await asyncio.sleep(seconds_until_next_hour)
-        print("Sending hourly message!")
+        logging.info("Hourly Message: Sending hourly message!")
         await send_message_in_channel(channel_id, message_str)
-        print("Hourly message sent.")
+        logging.info("Hourly Message: Hourly message sent.")
         in_an_hour = datetime.utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-        print("An hour from now is " + str(in_an_hour) + ".")
+        logging.info("Hourly Message: An hour from now is " + str(in_an_hour) + ".")
         seconds = (in_an_hour - now).total_seconds()
-        print("There are " + str(seconds) + " seconds between now and then.")
-        print("Waiting for " + str(seconds) + " seconds...")
+        time_str = await goose_bot_utils.make_time_str(seconds)
+        logging.info("Hourly Message: There are " + time_str + "  between now and then.")
+        logging.info("Hourly Message: Waiting for " + time_str + " (" + str(seconds) + ") seconds...")
         await asyncio.sleep(seconds)
 
 
@@ -291,7 +291,6 @@ def set_up_scheduled_messages():
 
 
 set_up_scheduled_messages()
-
 
 # Run the bot!
 goose_bot.run(BOT_TOKEN)
